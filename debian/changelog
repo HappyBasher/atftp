@@ -1,3 +1,9 @@
+atftp (0.7.git20210915-4~bpo11+1) bullseye-backports; urgency=medium
+
+  * Rebuild for bullseye-backports.
+
+ -- Andreas B. Mundt <andi@debian.org>  Wed, 16 Feb 2022 20:41:02 +0100
+
 atftp (0.7.git20210915-4) unstable; urgency=medium
 
   * Fix pcre2 build configuration.
