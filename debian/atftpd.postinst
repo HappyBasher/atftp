@@ -72,7 +72,7 @@ fi
 
 db_get atftpd/verbosity
 if [ "$RET" ]; then
-    RET=`echo $RET | cut -f1 -d ' '`
+    RET=$(echo $RET | cut -f1 -d ' ')
     VERBOSITY="--verbose=$RET"
 fi
 
@@ -89,7 +89,7 @@ if [ "$RET" = "true" ]; then
         fi
         # create the logrotate file
         if [ ! -f /etc/logrotate.d/atftpd ] || \
-		! grep -q "^$RET " /etc/logrotate.d/atftpd 2>&1 > /dev/null ; then
+		! grep -q "^$RET " /etc/logrotate.d/atftpd > /dev/null 2>&1 ; then
             cat >/etc/logrotate.d/atftpd <<EOF
 $RET {
     daily
@@ -130,13 +130,13 @@ else
 	sed -i "s|^ *OPTIONS=.*|OPTIONS=\"$OPTIONS\"|" $CONFIGFILE
 fi
 
-[ -f "$SYSDSOCK" ] && sed -ie "s|^ *ListenDatagram=0\.0\.0\.0.*$|ListenDatagram=0.0.0.0:$PORT|" "$SYSDSOCK"
+[ -f "$SYSDSOCK" ] && sed -i -e "s|^ *ListenDatagram=0\.0\.0\.0.*$|ListenDatagram=0.0.0.0:$PORT|" "$SYSDSOCK"
 
 
 case "$1" in
 	configure)
 		if dpkg --compare-versions "$2" le "0.7.git20210202" ; then
-			sed -ie "s|only with init script|with systemd and init script|" $CONFIGFILE
+			sed -i -e "s|only with init script|with systemd and init script|" $CONFIGFILE
 		fi
 		;;
 esac
