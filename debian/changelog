@@ -1,3 +1,9 @@
+atftp (0.7.git20210915-6~bpo11+1) bullseye-backports; urgency=medium
+
+  * Rebuild for bullseye-backports.
+
+ -- Andreas B. Mundt <andi@debian.org>  Mon, 22 Aug 2022 11:45:55 +0200
+
 atftp (0.7.git20210915-6) unstable; urgency=medium
 
   * Update spanish translations (closes: #1017451). Thanks to
