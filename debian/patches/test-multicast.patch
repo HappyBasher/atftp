@@ -1,3 +1,10 @@
+Description: Add multicast tests to the script.
+Author: Andreas B. Mundt <andi@debian.org>
+Forwarded: https://sourceforge.net/p/atftp/support-requests/10/
+Last-Update: 2022-08-30
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
 --- a/test/test.sh
 +++ b/test/test.sh
 @@ -54,6 +54,7 @@

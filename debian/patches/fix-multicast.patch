@@ -89,3 +89,13 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
                 if (data->trace)
                      fprintf(stderr, "received %d. DATA <block: %ld, size %d>, update last received block: %ld → %ld\n",
                              windowblock, block_number, data_size - 4, last_received_block, block_number);
+--- a/atftp.1
++++ b/atftp.1
+@@ -77,6 +77,7 @@
+   --option "timeout 1"
+   --option "disable windowsize"
+   --option "windowsize 4"
++  --option "multicast"
+ 
+ .TP
+ .B \-\-mtftp <"name value">
