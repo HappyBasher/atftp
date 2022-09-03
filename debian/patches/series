@@ -11,3 +11,4 @@ fix-last-window.patch
 fix-multicast.patch
 test-multicast.patch
 fix-mtftp.patch
+add-mtftp-tests.patch

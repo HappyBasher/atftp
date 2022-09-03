@@ -1,0 +1,179 @@
+Description: Add MTFTP to the test script.
+Author: Author: Andreas B. Mundt <andi@debian.org>
+Forwarded: https://sourceforge.net/p/atftp/
+Last-Update: 2022-09-04
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+--- a/test/test.sh
++++ b/test/test.sh
+@@ -94,7 +94,7 @@
+ 
+ start_server() {
+     # start a server
+-    echo -n "Starting atftpd server on port $PORT: "
++    echo -n "Starting 'atftpd "${SERVER_ARGS/ \*/ /}"', "
+     $ATFTPD $SERVER_ARGS > $SERVER_LOG &
+     if [ $? != 0 ]; then
+ 	echo "Error starting server."
+@@ -470,45 +470,100 @@
+     find "$TDIR" -name "high-server-load-out.*" -size 0 -delete
+ }
+ 
+-test_multicast(){
+-    local L M N=0 C NUM=6 FILE="128K.bin"
+-    echo -e "\n===== Test multicast option ..."
+-    echo -en "  Run atftp on: "
+-    for C in $MCASTCLNTS ; do
+-        echo -n "'$C', "
+-        L="/tmp/multicast.log"
+-        ssh "$C" "rm -f $L ; for N in \$(seq $NUM) ; do ./atftp --option multicast \
+-                 --option 'blksize 500' --get -r $FILE -l /tmp/$FILE --trace $HOST $PORT 2>&1 \
+-                 | grep -C3 OACK >> $L ; md5sum /tmp/$FILE >> $L ; rm /tmp/$FILE ; done  " &
+-        N=$(( N + 1 ))
+-    done
+-    echo "fetching '$FILE'."
+-    sleep 3
+-    echo -en "  Copy log file: "
+-    for C in $MCASTCLNTS ; do
+-        echo -n "'$C' "
+-        scp -q "$C:$L" "$TDIR/multicast-${C##*@}.log"
++check-rlogs(){
++    local CLNTS=$1 TOTAL=$2 NAME=$3 RLOG=$4 C
++    echo -en "  Copy log file '$RLOG' from hosts: "
++    for C in $CLNTS ; do
++        echo -n "."
++        scp -q "$C:$RLOG" "$TDIR/${NAME}-${C##*@}.log"
+     done
+     echo
+-    M=$(grep "/tmp/$FILE" "$TDIR"/multicast*.log | wc -l)
+-    if [[ $M = $(( N * NUM )) ]] ; then
+-        echo -e "\n  All $M multicast downloads registered → OK"
++    T=$(grep "/tmp/" "$TDIR"/${NAME}*.log | wc -l)
++    if [[ $T = $TOTAL ]] ; then
++        echo -e "\n  All $T $NAME downloads registered → OK"
+     else
+         ERROR=1
+-        echo "ERROR: Files missing:  $M != $(( N * NUM ))."
++        echo "ERROR: Files missing:  $T != $TOTAL."
++        echo "Did you wait long enough?"
+     fi
+-    ## check NUM in "$TDIR"/multicast*.log
+-    grep --no-filename "/tmp/$FILE" "$TDIR"/multicast*.log | uniq | \
+-        sed "s#/tmp/$FILE#$TDIR/$FILE#" > "$TDIR/MD5SUMS"
++    grep --no-filename "/tmp/" "$TDIR/${NAME}"*.log | sort | uniq | \
++        sed -e "s# /tmp/# $TDIR/#" > "$TDIR/MD5SUMS"
+     echo -n "  Check md5sums → "
+-    md5sum -c "$TDIR/MD5SUMS" | sed "s#$TDIR/##"
++    md5sum -c "$TDIR/MD5SUMS" | sed "s#$TDIR/##" | tr '\n' '\t'
++}
++
++
++test_multicast(){
++    local F L M N=0 C NUM=10 FILE=("128K.bin" "50K.bin") NAME='multicast' L="/tmp/multicast.log"
++    echo -e "\n===== Test multicast option ..."
++    echo -en "  Run atftp on hosts: "
++    for C in $MCASTCLNTS ; do
++        echo -n "."
++        F="${FILE[$((N%2))]}"
++        ssh "$C" "rm -f $L ; for N in \$(seq $NUM) ; do ./atftp --option multicast \
++                 --option 'blksize 500' --get -r $F -l /tmp/$F --trace $HOST $PORT 2>&1 \
++                 | grep -C3 OACK >> $L ; md5sum /tmp/$F >> $L ; rm /tmp/$F ; done  " &
++        N=$(( N + 1 ))
++        sleep 0.02
++    done
++    echo ", fetching: ${FILE[@]}"
++    sleep $(( 2*N ))
++    TOTAL=$(( N * NUM ))
++
++    check-rlogs "$MCASTCLNTS" "$TOTAL" "$NAME" "$L"
++
++    ## detailed checks:
+     M=$(grep --no-filename 'received OACK <mc = 1>' "$TDIR"/multicast*.log | wc -l)
+     N=$(grep 'Client transferred to' "$SERVER_LOG" | wc -l)
+     if [[ $M = $N ]] ; then
+-        echo "  Multicast client transfers detected: $M → OK"
++        echo -e "\n  Multicast client transfers detected: $M → OK"
+     else
+         ERROR=1
+-        echo "ERROR: Multicast client transfers are inconsistent:  $M != $N."
++        echo -e "\nERROR: Multicast client transfers are inconsistent:  $M != $N."
++    fi
++}
++
++test_mtftp(){
++    local F I M N=0 P T C NUM=10 FILE=("linux" "pxelinux.0") MCASTIP=("239.255.1.1" "239.255.1.2")
++    local NAME='mtftp' L="/tmp/multicast.log" TNUM
++    echo -e "\n===== Test mtftp ..."
++    [[ -e "$TDIR/linux" ]] || ln -sf  "$TDIR/128K.bin"  "$TDIR/linux"
++    [[ -e "$TDIR/pxelinux.0" ]] || ln -sf "$TDIR/50K.bin" "$TDIR/pxelinux.0"
++    stop_server
++    OLD_ARGS="$SERVER_ARGS"
++    SERVER_ARGS="${SERVER_ARGS//--verbose=?/--verbose=7}"
++    SERVER_ARGS="${SERVER_ARGS//--pcre*PCRE_pattern.txt/--mtftp mtftp.conf --mtftp-port $((PORT + 1)) --trace}"
++    echo -n "  " ; start_server
++
++    echo -en "  Run atftp on hosts: "
++    for C in $MCASTCLNTS ; do
++        echo -n "."
++        F="${FILE[$((N%2))]}"
++        I="${MCASTIP[$((N%2))]}"
++        ssh "$C" "rm -f $L ; for N in \$(seq $NUM) ; do ./atftp --mtftp 'client-port 3001' \
++                 --mtftp 'mcast-ip $I' --mget -r $F -l /tmp/$F --trace $HOST 2002 2>&1 \
++                 | grep 'got all packets' >> $L ; md5sum /tmp/$F >> $L ; rm /tmp/$F ; done" &
++        sleep 0.02
++        N=$(( N + 1 ))
++    done
++    echo ", fetching: ${FILE[@]}"
++
++    sleep $(( 3 * N ))
++    TOTAL=$(( N * NUM ))
++
++    check-rlogs "$MCASTCLNTS" "$TOTAL" "$NAME" "$L"
++
++    ## detailed checks:
++    M=$(grep --no-filename 'got all packets' "$TDIR"/mtftp*.log | wc -l)
++    N=$(grep 'mtftp: already serving this file' "$SERVER_LOG" | wc -l)
++    P=$(grep 'received RRQ' "$SERVER_LOG" | wc -l)
++    echo -e "\n  RRQs received: $P, but 'already served': $N"
++    echo "  Received by just listening, no RRQ: $M"
++    if [[ $((M+P-N)) = $T ]] ; then
++        echo -e "\n  MTFTP client transfers consistent → OK"
++    else
++        ERROR=1
++        echo -e "\nERROR: Multicast client transfers are inconsistent:  $M != $N."
+     fi
+ }
+ 
+@@ -574,26 +630,23 @@
+ 
+ if [[ -n "$MCASTCLNTS" ]] && [[ "$HOST" != "127.0.0.1" ]]  ; then
+     test_multicast
++    test_mtftp
+ else
+     cat <<EOF
+ 
+-To test multicast (RFC 2090), you need to prepare some hosts
+-in the local network.  Make sure they have atftp available and
+-configure ssh pubkey login (without password).
++To test multicast (RFC 2090) or MTFTP, you need to prepare some
++hosts in the local network.  Make sure they have atftp available
++and configure ssh pubkey login (without password).
+ 
+ Then run $0 like:
+ 
+    MCASTCLNTS='user1@host1 … userN@hostN' HOST='192.168.2.100' $0
+ 
+-In addition, network traffic may be checked with tcpdump or
++In addition, consider checking network traffic with tcpdump or
+ wireshark when running the command above.
+ EOF
+ fi
+ 
+-#
+-# testing mtftp
+-#
+-
+ echo
+ stop_and_clean
+ 
