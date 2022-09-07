@@ -1,8 +1,17 @@
-atftp (0.7.git20210915-6~bpo11+1) bullseye-backports; urgency=medium
+atftp (0.8.0-1) unstable; urgency=medium
 
-  * Rebuild for bullseye-backports.
+  * New upstream version 0.8.0, all patches have been applied upstream.
+  * Improve algorithm (windowsize option):
+      - Do not send multiple identical ACKs without timeout.
+      - Acknowledge only the first outdatet/duplicated block
+        within a window.
+      - Fix corner case, where a block gets lost in the last window.
+  * Rewrite test script, mostly structuring and clean-up.
+  * Fix multicast transfers and add multicast tests.
+  * Fix MTFTP and add tests, implement PCRE tests.
+  * Monitor git repo to perhaps switch to HEAD later.
 
- -- Andreas B. Mundt <andi@debian.org>  Mon, 22 Aug 2022 11:45:55 +0200
+ -- Andreas B. Mundt <andi@debian.org>  Wed, 07 Sep 2022 17:37:59 +0200
 
 atftp (0.7.git20210915-6) unstable; urgency=medium
 
