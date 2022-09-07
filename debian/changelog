@@ -1,3 +1,9 @@
+atftp (0.8.0-1~bpo11+1) bullseye-backports; urgency=medium
+
+  * Rebuild for bullseye-backports.
+
+ -- Andreas B. Mundt <andi@debian.org>  Wed, 07 Sep 2022 18:36:52 +0200
+
 atftp (0.8.0-1) unstable; urgency=medium
 
   * New upstream version 0.8.0, all patches have been applied upstream.
