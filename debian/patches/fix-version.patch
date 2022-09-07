@@ -1,0 +1,18 @@
+Description: Fix version string.
+Author: Andreas B. Mundt <andi@debian.org>
+Forwarded: https://sourceforge.net/p/atftp/bugs/9/
+Last-Update: 2022-09-07
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+--- a/configure.ac
++++ b/configure.ac
+@@ -10,7 +10,7 @@
+ dnl Free Software Foundation; either version 2 of the License, or (at your
+ dnl option) any later version.
+ 
+-AC_INIT([atftp],[0.7.5])
++AC_INIT([atftp],[0.8.0])
+ AC_CONFIG_SRCDIR([tftp.c])
+ AM_INIT_AUTOMAKE
+ 

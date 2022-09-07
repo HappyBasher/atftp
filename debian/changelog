@@ -1,4 +1,4 @@
-atftp (0.8.0-1) UNRELEASED; urgency=medium
+atftp (0.8.0-1) unstable; urgency=medium
 
   * New upstream version 0.8.0, all patches have been applied upstream.
   * Improve algorithm (windowsize option):
@@ -11,7 +11,7 @@ atftp (0.8.0-1) UNRELEASED; urgency=medium
   * Fix MTFTP and add tests, implement PCRE tests.
   * Monitor git repo to perhaps switch to HEAD later.
 
- -- Andreas B. Mundt <andi@debian.org>  Wed, 07 Sep 2022 13:51:41 +0200
+ -- Andreas B. Mundt <andi@debian.org>  Wed, 07 Sep 2022 17:37:59 +0200
 
 atftp (0.7.git20210915-6) unstable; urgency=medium
 
