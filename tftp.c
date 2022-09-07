@@ -528,27 +528,32 @@ int set_option(int argc, char **argv)
           fprintf(stderr, "Usage: option <option name> [option value]\n");
           fprintf(stderr, "       option disable <option name>\n");
           if (data.tftp_options[OPT_TSIZE].specified)
-               fprintf(stderr, "  tsize:     enabled\n");
+               fprintf(stderr, "  tsize:      enabled\n");
           else
-               fprintf(stderr, "  tsize:     disabled\n");
+               fprintf(stderr, "  tsize:      disabled\n");
           if (data.tftp_options[OPT_BLKSIZE].specified)
-               fprintf(stderr, "  blksize:   %s\n",
+               fprintf(stderr, "  blksize:    %s\n",
                        data.tftp_options[OPT_BLKSIZE].value);
           else
-               fprintf(stderr, "  blksize:   disabled\n");
+               fprintf(stderr, "  blksize:    disabled\n");
+          if (data.tftp_options[OPT_WINDOWSIZE].specified)
+               fprintf(stderr, "  windowsize:   %s\n",
+                       data.tftp_options[OPT_WINDOWSIZE].value);
+          else
+               fprintf(stderr, "  windowsize: disabled\n");
           if (data.tftp_options[OPT_TIMEOUT].specified)
-               fprintf(stderr, "  timeout:   %s\n",
+               fprintf(stderr, "  timeout:    %s\n",
                        data.tftp_options[OPT_TIMEOUT].value);
           else
-               fprintf(stderr, "  timeout:   disabled\n");
+               fprintf(stderr, "  timeout:    disabled\n");
           if (data.tftp_options[OPT_MULTICAST].specified)
-               fprintf(stderr, "  multicast: enabled\n");
+               fprintf(stderr, "  multicast:  enabled\n");
           else
-               fprintf(stderr, "  multicast: disabled\n");
+               fprintf(stderr, "  multicast:  disabled\n");
           if (data.tftp_options[OPT_PASSWORD].specified)
-               fprintf(stderr, "   password: enabled\n");
+               fprintf(stderr, "  password:   enabled\n");
           else
-               fprintf(stderr, "   password: disabled\n");
+               fprintf(stderr, "  password:   disabled\n");
           return ERR;
      }
      /* if disabling an option */
@@ -863,34 +868,38 @@ int status(int argc, char **argv)
      if (!data.connected)
           fprintf(stderr, "Not connected\n");
      else
-          fprintf(stderr, "Connected:  %s port %d\n", data.hostname,
+          fprintf(stderr, "Connected:   %s port %d\n", data.hostname,
                   data.port);
      fprintf(stderr, "Mode:       %s\n", data.tftp_options[OPT_MODE].value);
      if (data.verbose)
-          fprintf(stderr, "Verbose:    on\n");
+          fprintf(stderr, "Verbose:     on\n");
      else
-          fprintf(stderr, "Verbose:    off\n");
+          fprintf(stderr, "Verbose:     off\n");
      if (data.trace)
-          fprintf(stderr, "Trace:      on\n");
+          fprintf(stderr, "Trace:       on\n");
      else
-          fprintf(stderr, "Trace:      off\n");
+          fprintf(stderr, "Trace:       off\n");
      fprintf(stderr, "Options\n");
      if (data.tftp_options[OPT_TSIZE].specified)
-          fprintf(stderr, " tsize:     enabled\n");
+          fprintf(stderr, " tsize:      enabled\n");
      else
-          fprintf(stderr, " tsize:     disabled\n");
+          fprintf(stderr, " tsize:      disabled\n");
      if (data.tftp_options[OPT_BLKSIZE].specified)
-          fprintf(stderr, " blksize:   enabled\n");
+          fprintf(stderr, " blksize:    enabled\n");
      else
-          fprintf(stderr, " blksize:   disabled\n");
+          fprintf(stderr, " blksize:    disabled\n");
+     if (data.tftp_options[OPT_WINDOWSIZE].specified)
+          fprintf(stderr, " windowsize: enabled\n");
+     else
+          fprintf(stderr, " windowsize: disabled\n");
      if (data.tftp_options[OPT_TIMEOUT].specified)
-          fprintf(stderr, " timeout:   enabled\n");
+          fprintf(stderr, " timeout:    enabled\n");
      else
-          fprintf(stderr, " timeout:   disabled\n");
+          fprintf(stderr, " timeout:    disabled\n");
      if (data.tftp_options[OPT_MULTICAST].specified)
-          fprintf(stderr, " multicast: enabled\n");
+          fprintf(stderr, " multicast:  enabled\n");
      else
-          fprintf(stderr, " multicast: disabled\n");
+          fprintf(stderr, " multicast:  disabled\n");
 #ifdef HAVE_MTFTP
      fprintf(stderr, "mtftp variables\n");
      fprintf(stderr, " client-port:   %d\n", data.mtftp_client_port);

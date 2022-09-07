@@ -106,7 +106,7 @@ int opt_parse_options(char *data, int data_size, struct tftp_opt *options)
 /*
  * Set an option by name in the structure.
  * name is the name of the option as in tftp_def.c.
- * name is it's new value, that must comply with the rfc's.
+ * value is it's new value, that must comply with the rfc's.
  * When setting an option, it is marked as specified.
  * 
  */
@@ -232,6 +232,17 @@ int opt_get_blksize(struct tftp_opt *options)
      return ERR;
 }
 
+int opt_get_windowsize(struct tftp_opt *options)
+{
+     int windowsize;
+     if (options[OPT_WINDOWSIZE].enabled && options[OPT_WINDOWSIZE].specified)
+     {
+          windowsize = atoi(options[OPT_WINDOWSIZE].value);
+          return windowsize;
+     }
+     return ERR;
+}
+
 int opt_get_multicast(struct tftp_opt *options, char *addr, int *port, int *mc)
 {
      char *token = NULL;
@@ -298,6 +309,11 @@ void opt_set_timeout(int timeout, struct tftp_opt *options)
 void opt_set_blksize(int blksize, struct tftp_opt *options)
 {
      snprintf(options[OPT_BLKSIZE].value, VAL_SIZE, "%d", blksize);
+}
+
+void opt_set_windowsize(int windowsize, struct tftp_opt *options)
+{
+     snprintf(options[OPT_WINDOWSIZE].value, VAL_SIZE, "%d", windowsize);
 }
 
 void opt_set_multicast(struct tftp_opt *options, char *addr, int port, int mc)

@@ -111,14 +111,19 @@ int tftp_find_bitmap_hole(int prev_hole, unsigned int *bitmap)
  */
 int tftp_receive_file(struct client_data *data)
 {
-     int state = S_SEND_REQ;    /* current state in the state machine */
-     int timeout_state = state; /* what state should we go on when timeout */
+     int state = S_SEND_REQ;       /* current state in the state machine */
+     int timeout_state = state;    /* what state should we go on when timeout */
+     int windowblock = 0;          /* number of block in a window, c.f. RFC7440 */
+     int windowsize = 1;           /* c.f. RFC7440 */
      int result;
      long block_number = 0;
-     long last_block_number = -1;/* block number of last block for multicast */
-     int data_size;             /* size of data received */
-     int sockfd = data->sockfd; /* just to simplify calls */
-     struct sockaddr_storage sa; /* a copy of data.sa_peer */
+     long last_received_block = 0;
+     long last_block_number = -1;  /* block number of last block for multicast */
+     int extra_ack = 0;            /* number of additional ACKs */
+     //int debug = 0;              /* used for simulating datagram losses */
+     int data_size;                /* size of data received */
+     int sockfd = data->sockfd;    /* just to simplify calls */
+     struct sockaddr_storage sa;   /* a copy of data.sa_peer */
      struct sockaddr_storage from;
      char from_str[SOCKADDR_PRINT_ADDR_LEN];
      int connected;             /* 1 when sockfd is connected */
@@ -233,17 +238,26 @@ int tftp_receive_file(struct client_data *data)
                                    call to tftp_send_request */
                break;
           case S_SEND_ACK:
+               windowblock = 0;
                timeout_state = S_SEND_ACK;
                if (multicast)
                {
                     /* walk the bitmap to find the next missing block */
                     prev_bitmap_hole =
                          tftp_find_bitmap_hole(prev_bitmap_hole, file_bitmap);
-                    block_number = prev_bitmap_hole;
+                    block_number = last_received_block = prev_bitmap_hole;
                }
+               /* This might be used for simulating a lost ACK (with windowsize=32):
+               if ((last_received_block != 320) || (debug != 0)) {
+                    tftp_send_ack(sockfd, &sa, last_received_block);
+               } else {
+                    debug++;
+               }
+                  Comment the next line if debugging is activated! */
+               tftp_send_ack(sockfd, &sa, last_received_block);
                if (data->trace)
-                    fprintf(stderr, "sent ACK <block: %ld>\n", block_number);
-               tftp_send_ack(sockfd, &sa, block_number);
+                    fprintf(stderr, "sent ACK <block: %ld>\n", last_received_block);
+
                /* if we just ACK the last block we are done */
                if (block_number == last_block_number)
                     state = S_END;
@@ -255,7 +269,7 @@ int tftp_receive_file(struct client_data *data)
                if (multicast)
                {
                     result = tftp_get_packet(sockfd, mcast_sockfd, NULL, &sa, &from,
-                                             NULL, data->timeout, &data_size,
+                                             NULL, data->timeout, 0, &data_size,
                                              data->data_buffer);
                     /* RFC2090 state we should verify source address as well
                        as source port */
@@ -268,7 +282,7 @@ int tftp_receive_file(struct client_data *data)
                else
                {
                     result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL,
-                                             data->timeout, &data_size,
+                                             data->timeout, 0, &data_size,
                                              data->data_buffer);
                     /* Check that source port match */
                     if ((sockaddr_get_port(&sa) != sockaddr_get_port(&from)) &&
@@ -289,7 +303,8 @@ int tftp_receive_file(struct client_data *data)
                {
                case GET_TIMEOUT:
                     number_of_timeout++;
-                    fprintf(stderr, "timeout: retrying...\n");
+                    extra_ack = 0;
+                    fprintf(stderr, "timeout: retrying ...\n");
                     if (number_of_timeout > NB_OF_RETRY)
                          state = S_ABORT;
                     else
@@ -406,8 +421,8 @@ int tftp_receive_file(struct client_data *data)
                     memcpy(data->tftp_options_reply, tftp_default_options,
                            sizeof(tftp_default_options));
                     /*
-                     * look in the returned string for tsize, timeout, blksize
-                     * or multicast
+                     * look in the returned string for tsize, timeout,
+                     * blksize, windowsize or multicast
                      */
                     opt_disable_options(data->tftp_options_reply, NULL);
                     opt_parse_options(data->data_buffer, data_size,
@@ -415,28 +430,31 @@ int tftp_receive_file(struct client_data *data)
                     if (data->trace)
                          fprintf(stderr, "received OACK <");
                     /* tsize: funny, now we know the file size */
-                    if ((result = opt_get_tsize(data->tftp_options_reply)) >
-                        -1)
+                    if ((result = opt_get_tsize(data->tftp_options_reply)) > -1)
                     {
                          if (data->trace)
                               fprintf(stderr, "tsize: %d, ", result);
                     }
+                    /* windowsize */
+                    if ((result = opt_get_windowsize(data->tftp_options_reply)) > -1)
+                    {
+                         if (data->trace)
+                              fprintf(stderr, "windowsize: %d, ", result);
+                         windowsize = result;
+                    }
                     /* timeout */
-                    if ((result = opt_get_timeout(data->tftp_options_reply))
-                        > -1)
+                    if ((result = opt_get_timeout(data->tftp_options_reply)) > -1)
                     {
                          if (data->trace)
                               fprintf(stderr, "timeout: %d, ", result);
                     }
                     /* blksize: resize the buffer please */
-                    if ((result = opt_get_blksize(data->tftp_options_reply))
-                        > -1)
+                    if ((result = opt_get_blksize(data->tftp_options_reply)) > -1)
                     {
                          if (data->trace)
                               fprintf(stderr, "blksize: %d, ", result);
 
-                         data->data_buffer = realloc(data->data_buffer,
-                                                     result + 4);
+                         data->data_buffer = realloc(data->data_buffer, result + 4);
                          tftphdr = (struct tftphdr *)data->data_buffer;
                          if (data->data_buffer == NULL)
                          {
@@ -526,27 +544,47 @@ int tftp_receive_file(struct client_data *data)
                     state = S_WAIT_PACKET;
                break;
           case S_DATA_RECEIVED:
-               if ((multicast && master_client) || (!multicast))
-                    timeout_state = S_SEND_ACK;
+               if (multicast)
+                    block_number = ntohs(tftphdr->th_block);
                else
+                    block_number = tftp_rollover_blocknumber(ntohs(tftphdr->th_block), prev_block_number, 0);
+
+               if ((last_received_block < windowsize) && (timeout_state = S_SEND_OACK))
+                    timeout_state = S_SEND_ACK;
+
+               if ((!multicast) || (multicast && master_client)) {
+                    timeout_state = S_SEND_ACK;
+                    /* The sequence of blocks may contain a gap, i.e. (block_number > last_received_block + 1).
+                       Send an extra ACK for the last block before the gap once.
+
+                       The ACK of a received window gets lost.  The sender times out and starts
+                       sending all blocks of that window again, i.e. (block_number < last_received_block + 1).
+                       Again, send the extra ACK. */
+                    if (block_number != last_received_block + 1) {
+                         if (extra_ack < 1) {
+                              fprintf(stderr, "got wrong block <block: %ld>, sending extra ACK for <block: %ld>\n",
+                                      block_number, last_received_block);
+                              extra_ack++;
+                              state = S_SEND_ACK;
+                         } else {
+                              fprintf(stderr, "got wrong block <block: %ld>, ignoring\n", block_number);
+                              state = S_WAIT_PACKET;
+                         }
+                         break;
+                    }
+                    extra_ack = 0;
+                    windowblock++;
+               } else {
                     timeout_state = S_WAIT_PACKET;
+               }
 
-	       if (multicast)
-		    block_number = ntohs(tftphdr->th_block);
-	       else
-	       {
-		    block_number = tftp_rollover_blocknumber(
-			ntohs(tftphdr->th_block), prev_block_number, 0);
-	       }
                if (data->trace)
-                    fprintf(stderr, "received DATA <block: %ld, size: %d>\n",
-                            block_number, data_size - 4);
-
+                    fprintf(stderr, "received %d. DATA <block: %ld, size %d>, update last received block: %ld → %ld\n",
+                            windowblock, block_number, data_size - 4, last_received_block, block_number);
+               last_received_block = block_number;
                if (tftp_file_write(fp, tftphdr->th_data, data->data_buffer_size - 4, block_number,
-                                   data_size - 4, convert, &prev_block_number, &temp)
-                   != data_size - 4)
+                                   data_size - 4, convert, &prev_block_number, &temp) != data_size - 4)
                {
-
                     fprintf(stderr, "tftp: error writing to file %s\n",
                             data->local_file);
                     tftp_send_error(sockfd, &sa, ENOSPACE, data->data_buffer,
@@ -566,13 +604,18 @@ int tftp_receive_file(struct client_data *data)
                          |= (1 << ((block_number - 1) % 32));
                     /* if we are the master client we ack, else
                        we just wait for data */
-                    if (master_client || !multicast)
+                    if (master_client || !multicast)  // FIXME
                          state = S_SEND_ACK;
                     else
                          state = S_WAIT_PACKET;
                }
                else
-                    state = S_SEND_ACK;
+               {
+                    if ((windowblock >= windowsize) || (last_block_number != -1))
+                         state = S_SEND_ACK;
+                    else
+                         state = S_WAIT_PACKET;
+               }
                break;
           case S_END:
           case S_ABORT:
@@ -628,6 +671,9 @@ int tftp_send_file(struct client_data *data)
 {
      int state = S_SEND_REQ;    /* current state in the state machine */
      int timeout_state = state; /* what state should we go on when timeout */
+     int windowblock = 0;       /* number of block in a window, c.f. RFC7440 */
+     int windowsize = 1;        /* c.f. RFC7440 */
+     int delay = 0;             /* delay between datagrams in a window */
      int result;
      long block_number = 0;
      long last_requested_block = -1;
@@ -747,21 +793,41 @@ int tftp_send_file(struct client_data *data)
                                           convert, &prev_block_number, &prev_file_pos, &temp);
                data_size += 4;  /* need to consider tftp header */
 
-               if (feof(fp))
-                    last_block = block_number;
                tftp_send_data(sockfd, &sa, block_number + 1,
                               data_size, data->data_buffer);
                data->file_size += data_size;
+               windowblock++;
                if (data->trace)
-                    fprintf(stderr, "sent DATA <block: %ld, size: %d>\n",
-                            block_number + 1, data_size - 4);
+                    fprintf(stderr, "sent %d. DATA <block: %ld, size %d>\n",
+                           windowblock, block_number + 1, data_size - 4);
                state = S_WAIT_PACKET;
+               if (feof(fp))
+                    last_block = block_number;
+               else
+                    block_number = tftp_rollover_blocknumber(
+                         ntohs(tftphdr->th_block), prev_block_number, 0);
                break;
           case S_WAIT_PACKET:
                data_size = data->data_buffer_size;
-               result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL,
-                                        data->timeout, &data_size,
-                                        data->data_buffer);
+               if ((windowblock >= windowsize) || (block_number == 0) || (last_block != -1))
+               {
+                    windowblock = 0;
+                    /* we wait for the ACK */
+                    result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL,
+                                             data->timeout, 0, &data_size, data->data_buffer);
+               }
+               else
+               {
+                    /* we check if an unsolicitated ACK arrived */
+                    result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL,
+                                             0, delay, &data_size, data->data_buffer);
+                    if (result == GET_TIMEOUT)
+                    {
+                         /* we send the next block */
+                         state = S_SEND_DATA;
+                         break;
+                    }
+               }
                /* check that source port match */
                if (sockaddr_get_port(&sa) != sockaddr_get_port(&from))
                {
@@ -777,7 +843,7 @@ int tftp_send_file(struct client_data *data)
                {
                case GET_TIMEOUT:
                     number_of_timeout++;
-                    fprintf(stderr, "timeout: retrying...\n");
+                    fprintf(stderr, "timeout: retrying ...\n");
                     if (number_of_timeout > NB_OF_RETRY)
                          state = S_ABORT;
                     else
@@ -785,14 +851,17 @@ int tftp_send_file(struct client_data *data)
                     break;
                case GET_ACK:
                     number_of_timeout = 0;
+                    windowblock = 0;
                     /* if the socket if not connected, connect it */
                     if (!connected)
                     {
                          //connect(sockfd, (struct sockaddr *)&sa, sizeof(sa));
                          connected = 1;
                     }
-		    block_number = tftp_rollover_blocknumber(
-			ntohs(tftphdr->th_block), prev_block_number, 0);
+                    block_number = tftp_rollover_blocknumber(
+                         ntohs(tftphdr->th_block), prev_block_number, 0);
+                    // The last block has been sent, but not received. Reset last_block:
+                    if (block_number < last_block) last_block = -1;
 
                     /* if turned on, check whether the block request isn't already fulfilled */
                     if (tftp_prevent_sas) {
@@ -868,6 +937,13 @@ int tftp_send_file(struct client_data *data)
                {
                     if (data->trace)
                          fprintf(stderr, "tsize: %d, ", result);
+               }
+               /* windowsize */
+               if ((result = opt_get_windowsize(data->tftp_options_reply)) > -1)
+               {
+                    if (data->trace)
+                         fprintf(stderr, "windowsize: %d, ", result);
+                    windowsize = result;
                }
                /* timeout */
                if ((result = opt_get_timeout(data->tftp_options_reply)) > -1)
