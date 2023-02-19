@@ -1,0 +1,202 @@
+# Mesajele în limba română pentru pachetul atftp.
+# Romanian translation of atftp.
+# Copyright © 2023 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the atftp package.
+#
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2023.
+#
+# Cronologia traducerii fișierului „aide”:
+# Traducerea inițială, făcută de R-GC, pentru versiunea aide 0.17.4-2.
+# Actualizare a traducerii pentru versiunea Y, făcută de X, Y(anul).
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: atftp 0.8.0-2\n"
+"Report-Msgid-Bugs-To: atftp@packages.debian.org\n"
+"POT-Creation-Date: 2022-02-11 12:31+0100\n"
+"PO-Revision-Date: 2023-02-08 00:28+0100\n"
+"Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
+"Language-Team: \n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n==0 || (n!=1 && n%100>=1 && "
+"n%100<=19) ? 1 : 2);\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.2.2\n"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:1001
+msgid "Server timeout:"
+msgstr "Durata timpului de așteptare a serverului:"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:1001
+msgid "How many seconds the main thread waits before exiting."
+msgstr ""
+"Specificați câte secunde așteaptă firul principal al programului înainte de a "
+"ieși."
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:2001
+msgid "Retry timeout:"
+msgstr "Durata timpului de așteptare înainte de reîncercare:"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:2001
+msgid "How many seconds to wait for a reply before retransmitting a packet."
+msgstr ""
+"Specificați câte secunde trebuie să se aștepte un răspuns înainte de a "
+"retransmite un pachet."
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:3001
+msgid "Maximum number of threads:"
+msgstr "Numărul maxim de fire de execuție:"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:3001
+msgid "Maximum number of concurrent threads that can be running."
+msgstr "Numărul maxim de fire de execuție simultane care pot rula."
+
+#. Type: select
+#. Description
+#: ../atftpd.templates:4001
+msgid "Verbosity level:"
+msgstr "Nivelul de detaliere al înregistrărilor din jurnal:"
+
+#. Type: select
+#. Description
+#: ../atftpd.templates:4001
+msgid ""
+"Level of logging. 7 logs everything including debug logs. 1 will log only the "
+"system critical logs. 5 (LOG_NOTICE) is the default value."
+msgstr ""
+"Nivelul de înregistrare a evenimentelor în jurnal: 7 înregistrează totul, "
+"inclusiv informațiile de depanare, 1 va înregistra numai informațiile critice "
+"ale sistemului, 5 „LOG_NOTICE” (informațiile de notificare) este valoarea "
+"implicită."
+
+#. Type: boolean
+#. Description
+#: ../atftpd.templates:5001
+msgid "Enable 'timeout' support?"
+msgstr "Activați gestionarea opțiunii „timeout” a TFTP?"
+
+#. Type: boolean
+#. Description
+#: ../atftpd.templates:6001
+msgid "Enable 'tsize' support?"
+msgstr "Activați gestionarea opțiunii „tsize” a TFTP?"
+
+#. Type: boolean
+#. Description
+#: ../atftpd.templates:7001
+msgid "Enable 'blksize' support?"
+msgstr "Activați gestionarea opțiunii „blksize” a TFTP?"
+
+#. Type: boolean
+#. Description
+#: ../atftpd.templates:8001
+msgid "Enable 'windowsize' support?"
+msgstr "Activați gestionarea opțiunii „windowsize” a TFTP?"
+
+#. Type: boolean
+#. Description
+#: ../atftpd.templates:9001
+msgid "Enable multicast support?"
+msgstr "Activați gestionarea difuzării multiple (multicast)?"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:10001
+msgid "TTL for multicast packets:"
+msgstr "TTL pentru pachetele de difuzare multiplă (multicast):"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:11001
+msgid "Port to listen for tftp request:"
+msgstr "Port pentru a asculta cererea tftp:"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:12001
+msgid "Port range for multicast file transfer:"
+msgstr ""
+"Intervalul de porturi pentru transferul de fișiere de difuzare multiplă "
+"(multicast):"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:12001
+msgid ""
+"Multicast transfer will use any available port in a given set. For example, "
+"\"2000-2003, 3000\" allow atftpd to use port 2000 to 2003 and 3000."
+msgstr ""
+"Transferul de difuzare multiplă (multicast) va utiliza orice port disponibil "
+"dintr-un set dat. De exemplu, „2000-2003, 3000” permite «atftpd» să utilizeze "
+"porturile de la 2000 până la 2003 și portul 3000."
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:13001
+msgid "Address range for multicast transfer:"
+msgstr "Intervalul de adrese pentru transferul de difuzare multiplă (multicast):"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:13001
+msgid ""
+"Multicast transfer will use any available addresses from a given set of "
+"addresses. Syntax is \"a.b.c.d-d,a.b.c.d,...\""
+msgstr ""
+"Transferul de difuzare multiplă (multicast) va folosi orice adrese disponibile "
+"dintr-un anumit set de adrese. Sintaxa este „a.b.c.d-d,a.b.c.d,...”"
+
+#. Type: boolean
+#. Description
+#: ../atftpd.templates:14001
+msgid "Log to file instead of journal/syslog?"
+msgstr ""
+"Doriți înregistrarea mesajelor într-un fișier-jurnal în loc de utilizarea "
+"jurnalului de «syslog»?"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:15001
+msgid "Log file:"
+msgstr "Fișierul-jurnal:"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:15001
+msgid ""
+"A file where atftpd will write its logs. This file will be made writable for "
+"the user 'nobody' and group 'nogroup'."
+msgstr ""
+"Un fișier în care «atftpd» își va scrie mesajele informative. Acest fișier va "
+"putea fi scris de către utilizatorul „nobody” și grupul „nogroup”."
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:16001
+msgid "Base directory:"
+msgstr "Directorul bază:"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:16001
+msgid ""
+"The directory tree from where atftpd can serve files. That directory must be "
+"world readable."
+msgstr ""
+"Directorul de bază al arborelui de directoare de unde «atftpd» poate servi "
+"fișierele. Directorul respectiv trebuie să poată fi citit de toată lumea."
