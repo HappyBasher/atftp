@@ -1,3 +1,10 @@
+atftp (0.8.0-3) unstable; urgency=medium
+
+  * Add romanian debconf translations (closes: #1031144). Thanks
+    to Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>.
+
+ -- Andreas B. Mundt <andi@debian.org>  Sun, 19 Feb 2023 18:10:45 +0100
+
 atftp (0.8.0-2) unstable; urgency=medium
 
   * Prepare release for bookworm.
