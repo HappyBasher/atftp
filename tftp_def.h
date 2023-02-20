@@ -34,6 +34,9 @@
 #define NB_OF_RETRY   5
 #define	MAXBLOCKS     ((1 << (32 - 9)) - 1)  /* Maximum blocks we will xfer */
 
+#define FIFO_MAX_SIZE 16384     /* Maximum bytes to read from a named pipe */
+
+
 /* definition to use tftp_options structure */
 #define OPT_FILENAME   0
 #define OPT_MODE       1
