@@ -130,9 +130,6 @@ int tftpd_receive_file(struct thread_data *data)
      long prev_block_number = 0; /* needed to support netascii conversion */
      int temp = 0;
 
-     char *fifo_buf = NULL;
-     int fifo_len = -1;
-
      /* look for mode option */
      if (strcasecmp(data->tftp_options[OPT_MODE].value, "netascii") == 0)
      {
@@ -493,6 +490,9 @@ int tftpd_send_file(struct thread_data *data)
      long prev_block_number = 0; /* needed to support netascii conversion */
      long prev_file_pos = 0;
      int temp = 0;
+
+     char *fifo_buf = NULL;
+     int fifo_len = -1;
 
      int prev_sent_count = 0;
      int prev_ack_count = 0;
